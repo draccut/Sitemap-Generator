@@ -113,3 +113,5 @@ Speicherverwaltung folgt Rusts Ownership-Modell: alle
 Die fertige XML-Zeichenkette wird als `Box<String>` an den Aufrufer
 übergeben und beim Drop automatisch freigegeben es gibt keine
 manuellen `free`-Aufrufe.
+
+

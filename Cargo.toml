@@ -1,0 +1,14 @@
+[package]
+name = "sitemap_generator"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["clock"] }
+tokio = { version = "1", features = ["full"] }
+libc = "0.2"
+quick-xml = { version = "0.36", features = ["serialize"] }
+nix = { version = "0.29", features = ["socket", "uio", "user", "fs"] }
+users = "0.11"
+
