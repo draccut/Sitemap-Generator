@@ -24,12 +24,12 @@ Es gibt drei unterschiedliche Mechanismen, wie URLs in die Sitemap gelangen:
 ### 1. Statische Links (`static_links`)
 
 Feste URLs, die direkt in der Konfiguration hinterlegt werden.
-Jeder Eintrag besitzt ein `interval`, das den `lastmod`-Wert steuert:
+Jeder Eintrag besitzt eine `url`, und einen `interval`-Wert
 
 | Wert | Bedeutung |
 |------|-----------|
 | `TODAY` | Heutiger Tagesbeginn (00:00:00 lokal) |
-| *leer* | Fallback-Default-Datum |
+| *leer* | Fallback-Default-Datum von DEFAULT_LASTMOD in sitemap_builder.rs |
 | Timestamp | Fester Zeitpunkt im Format `%Y-%m-%dT%H:%M:%S%:z` |
 
 Ungültige Intervalle werden mit einer Fehlermeldung übersprungen
@@ -46,8 +46,7 @@ Für jede generierte Datei gilt:
 - Der **Dateiinhalt** wird als Sitemap-URL (`loc`) verwendet.
 - Der **Zeitstempel der letzten Änderung** (mtime) der Datei wird als `lastmod` übernommen.
 
-Damit lassen sich z. B. nummerierte Backend-Dateien abbilden,
-ohne jede URL einzeln zu pflegen.
+Pfade einfach in Dateien mit nummerierten Namen speichern
 
 ### 3. Rekursive Verzeichnisse (`recursiv_dir`)
 
@@ -86,8 +85,7 @@ Der Dienst arbeitet mit **zwei Threads**:
    Liefert den Read-Only-Buffer über HTTP aus. Die eigentliche
    TLS-Verschlüsselung übernimmt ein vorgeschalteter
    **Reverse-Proxy** (z. B. nginx, Caddy, Apache). Der
-   Sitemap-Dienst selbst spricht nur Klartext-HTTP und bleibt
-   bewusst schlank.
+   Sitemap-Dienst selbst spricht nur Klartext-HTTP
 
 ### Rechte & Isolation
 
@@ -96,22 +94,3 @@ Systembenutzer und eine Gruppe `sitemap` an. Anschließend wechselt
 sowohl der Server als auch der Builder-Thread in diesen
 unprivilegierten Kontext. Dadurch laufen Konfigurationslesen,
 Dateisystem-Walks und die HTTP-Auslieferung ohne root-Rechte.
-
-----
-
-## Aufbau der Module
-
-| Modul | Aufgabe |
-|-------|---------|
-| `parser.rs` | Deserialisiert `sitemap_config.xml`, validiert Intervalle, stellt Getter bereit |
-| `config_template.rs` | Öffentliche Wrapper (`get_static_links`, `get_dynamic_links`, `get_recursiv_dir`) |
-| `sitemap_builder.rs` | Sammelt Einträge aus allen drei Quellen, löst Timestamps auf, erzeugt die XML |
-| `xml_sitemap_gen` | Formatiert die Eintragsliste als gültiges Sitemap-XML |
-
-Speicherverwaltung folgt Rusts Ownership-Modell: alle
-`(loc, lastmod)`-Paare leben als owned `String`s in einem `Vec`.
-Die fertige XML-Zeichenkette wird als `Box<String>` an den Aufrufer
-übergeben und beim Drop automatisch freigegeben es gibt keine
-manuellen `free`-Aufrufe.
-
-

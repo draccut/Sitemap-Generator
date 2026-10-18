@@ -1,5 +1,3 @@
-use std::fs;
-use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
 
 use nix::unistd::{
@@ -9,7 +7,6 @@ use users::{get_group_by_name, get_user_by_name};
 
 const USERNAME: &str = "sitemap";
 const GROUPNAME: &str = "sitemap";
-const HOME: &str = "/home/sitemap";
 
 pub fn drop_p(handler_server: fn()) {
     if let Err(e) = run_server(handler_server) {
@@ -45,7 +42,6 @@ fn run_server(handler_server: fn()) -> Result<(), Box<dyn std::error::Error>> {
             create_user(USERNAME, GROUPNAME)?
         }
     };
-    setup_home(uid, gid)?;
     setgroups(&[gid])?;
     println!("[*] Wechsle zu User '{}' (UID={}, GID={})", USERNAME, uid, gid);
     setgid(gid)?;
@@ -75,9 +71,6 @@ fn create_group(name: &str) -> Result<Gid, Box<dyn std::error::Error>> {
     Ok(Gid::from_raw(g.gid()))
 }
 
-/**
- * Home anlegen – kein Login-Shell nötig
- */
 fn create_user(name: &str, group: &str) -> Result<Uid, Box<dyn std::error::Error>> {
     let status = Command::new("useradd")
     .args(["-m", "-g", group, "-s", "/usr/sbin/nologin", name])
@@ -87,18 +80,5 @@ fn create_user(name: &str, group: &str) -> Result<Uid, Box<dyn std::error::Error
     }
     let u = get_user_by_name(name).ok_or("User nach dem Anlegen nicht gefunden")?;
     Ok(Uid::from_raw(u.uid()))
-}
-
-fn setup_home(uid: Uid, gid: Gid) -> Result<(), Box<dyn std::error::Error>> {
-    if !std::path::Path::new(HOME).exists() {
-        fs::create_dir_all(HOME)?;
-        println!("[+] Home-Verzeichnis erstellt: {}", HOME);
-    }
-    let mut perms = fs::metadata(HOME)?.permissions();
-    perms.set_mode(0o750);
-    fs::set_permissions(HOME, perms)?;
-    nix::unistd::chown(HOME, Some(uid), Some(gid))?;
-    println!("[+] Home-Verzeichnis konfiguriert");
-    Ok(())
 }
 

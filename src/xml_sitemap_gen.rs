@@ -2,13 +2,14 @@ use crate::xml_tags::{SITEMAP_HEADER, SITEMAP_URL_ENTRY, SITEMAP_FOOTER};
 
 pub fn generate_sitemap_from_entries(entries: &[(String, String)]) -> String {
     let mut out = String::new();
+    let mut counter: u64 = 0;
     out.push_str(SITEMAP_HEADER);
     for (loc, lastmod) in entries {
-        let entry = SITEMAP_URL_ENTRY
-            .replace("{loc}", loc)
-            .replace("{lastmod}", lastmod);
+        let entry = SITEMAP_URL_ENTRY.replace("{loc}", loc).replace("{lastmod}", lastmod);
         out.push_str(&entry);
+        counter = counter + 1;
     }
+    println!("Countet sitemap entries: {}", counter);
     out.push_str(SITEMAP_FOOTER);
     out
 }
